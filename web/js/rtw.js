@@ -71,6 +71,8 @@ let chartuuids = [
 	Realtimestation,
 ];
 
+const chartColor = localStorage.getItem('rtw-chart-color') || '#6750A4';
+
 const charts = [
 	echarts.init(document.getElementById("wave-1"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
 	echarts.init(document.getElementById("wave-2"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
@@ -81,6 +83,19 @@ const charts = [
 	echarts.init(document.getElementById("wave-7"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
 	echarts.init(document.getElementById("wave-8"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
 ];
+
+// 監聽顏色變更事件
+window.addEventListener('rtw-color-change', (event) => {
+    const newColor = event.detail.color;
+    // 更新所有圖表的顏色
+    charts.forEach(chart => {
+        chart.setOption({
+            series: [{
+                color: newColor
+            }]
+        });
+    });
+});
 const chartdata = [
 	[],
 	[],
@@ -283,7 +298,7 @@ const setCharts = (ids) => {
 						type       : "line",
 						showSymbol : false,
 						data       : [],
-						color      : "#6750A4",
+						color      : chartColor,
 					},
 				],
 			});
@@ -327,7 +342,7 @@ async function init() {
                     type       : "line",
                     showSymbol : false,
                     data       : [],
-                    color      : "#6750A4",
+                    color      : chartColor,
                 },
             ],
         });

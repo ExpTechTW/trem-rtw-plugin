@@ -8,6 +8,20 @@ class DropDown {  constructor() {
       }
     };
 
+    this.loadColorPickerState = () => {
+      const colorPicker = document.getElementById('rtw-color-picker');
+      const colorDisplay = document.getElementById('rtw-color-display');
+      if (colorPicker && colorDisplay) {
+        const savedColor = localStorage.getItem('rtw-chart-color') || '#6750A4';
+        colorPicker.value = savedColor;
+        colorDisplay.textContent = savedColor;
+      }
+    };
+
+    this.saveColorPickerState = (color) => {
+      localStorage.setItem('rtw-chart-color', color);
+    };
+
     this.saveMainSwitchState = (value) => {
       localStorage.setItem('rtw-main-switch', value);
     };
@@ -36,30 +50,30 @@ class DropDown {  constructor() {
         .map(
           (source) => `
         <div class="setting-item-content">
-          <span class="setting-item-title">${source.text}</span>
-        </div>
-        <div
-          id="realtime-station-${source.keys}"
-          class="setting-option realtime-station"
-        >
-          <div class="location">
-            <span class="current">${source.value}</span>
-            <svg
-              class="selected-btn"
-              xmlns="http://www.w3.org/2000/svg"
-              height="24"
-              viewBox="0 0 24 24"
-              width="24"
-            >
-              <path
-                d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
-                fill="currentColor"
-              ></path>
-            </svg>
-          </div>
-          <div class="select-wrapper">
-            <div class="select-items city"></div>
-            <div class="select-items town"></div>
+          <span class="setting-item-title rts-station-title">${source.text}</span>
+          <div
+            id="realtime-station-${source.keys}"
+            class="setting-option realtime-station"
+          >
+            <div class="location">
+              <span class="current">${source.value}</span>
+              <svg
+                class="selected-btn"
+                xmlns="http://www.w3.org/2000/svg"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+              >
+                <path
+                  d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+            </div>
+            <div class="select-wrapper">
+              <div class="select-items city"></div>
+              <div class="select-items town"></div>
+            </div>
           </div>
         </div>
       `,
@@ -73,19 +87,29 @@ class DropDown {  constructor() {
         <div class="setting-item-wrapper">
           <div class="setting-item-content">
             <span class="setting-item-title">rtw setting</span>
-            <label class="switch-wrapper">
-              <span class="switch-btn"></span>
-              <span class="description">即時測站波形圖設定</span>
-            </label>
-            <div>
-              <span>即時測站波形圖總開關</span>
-              <label class="switch">
-                <input id="rtw-main-switch" type="checkbox">
-                <div class="slider round"></div>
-              </label>
+            <span class="description">即時測站波形圖設定</span>
+            <div class="setting-option">
+              <div>
+                <span>即時測站波形圖總開關</span>
+                <label class="switch">
+                  <input id="rtw-main-switch" type="checkbox">
+                  <div class="slider round"></div>
+                </label>
+              </div>
             </div>
-            ${options}
           </div>
+          <div class="setting-item-content">
+            <span class="setting-item-title">波形圖顏色</span>
+            <div class="setting-option">
+              <div>
+                <span id="rtw-color-display">#6750A4</span>
+                <label>
+                  <input type="color" id="rtw-color-picker" value="#6750A4">
+                </label>
+              </div>
+            </div>
+          </div>
+          ${options}
         </div>`;
       settingContent.appendChild(element);
       const mainSwitch = document.getElementById('rtw-main-switch');
@@ -97,6 +121,23 @@ class DropDown {  constructor() {
 
       // 載入已保存的總開關狀態
       this.loadMainSwitchState();
+
+      // 設置顏色選擇器的事件處理
+      const colorPicker = document.getElementById('rtw-color-picker');
+      const colorDisplay = document.getElementById('rtw-color-display');
+      if (colorPicker && colorDisplay) {
+        colorPicker.addEventListener('input', (e) => {
+          const color = e.target.value;
+          colorDisplay.textContent = color;
+          this.saveColorPickerState(color);
+          // 觸發事件通知圖表更新顏色
+          const event = new CustomEvent('rtw-color-change', { detail: { color } });
+          window.dispatchEvent(event);
+        });
+      }
+
+      // 載入已保存的顏色設置
+      this.loadColorPickerState();
     }
 
     this.initDropDown(TREM);
