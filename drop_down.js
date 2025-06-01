@@ -1,5 +1,7 @@
-class DropDown {  constructor() {
-    logger.info('DropDown: Initializing...');
+class DropDown {
+  constructor(logger) {
+    this.logger = logger;
+    this.logger.info('DropDown: Initializing...');
     this.loadMainSwitchState = () => {
       const switchEl = document.getElementById('rtw-main-switch');
       if (switchEl) {
@@ -22,10 +24,13 @@ class DropDown {  constructor() {
     ];
 
     this.defaultColor = '#6750A4';
+    this.defaultChartColor = '#6750A4';
+
+    this.messageContent = document.querySelector('.message-content');
+    this.messageBox = document.querySelector('.message-box');
   }
 
-  init(TREM, logger) {
-    this.logger = logger;
+  init(TREM, ipcRenderer, name) {
     const settingButtons = document.querySelector(".setting-buttons");
     const settingContent = document.querySelector(".setting-content");
     if (settingContent) {
@@ -38,30 +43,30 @@ class DropDown {  constructor() {
         .map(
           (source) => `
         <div class="setting-item-content">
-          <span class="setting-item-title">${source.text}</span>
-        </div>
-        <div
-          id="realtime-station-${source.keys}"
-          class="setting-option realtime-station"
-        >
-          <div class="location">
-            <span class="current">${source.value}</span>
-            <svg
-              class="selected-btn"
-              xmlns="http://www.w3.org/2000/svg"
-              height="24"
-              viewBox="0 0 24 24"
-              width="24"
-            >
-              <path
-                d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
-                fill="currentColor"
-              ></path>
-            </svg>
-          </div>
-          <div class="select-wrapper">
-            <div class="select-items city"></div>
-            <div class="select-items town"></div>
+          <span class="setting-item-title rts-station-title">${source.text}</span>
+          <div
+            id="realtime-station-${source.keys}"
+            class="setting-option realtime-station"
+          >
+            <div class="location">
+              <span class="current">${source.value}</span>
+              <svg
+                class="selected-btn"
+                xmlns="http://www.w3.org/2000/svg"
+                height="24"
+                viewBox="0 0 24 24"
+                width="24"
+              >
+                <path
+                  d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
+                  fill="currentColor"
+                ></path>
+              </svg>
+            </div>
+            <div class="select-wrapper">
+              <div class="select-items city"></div>
+              <div class="select-items town"></div>
+            </div>
           </div>
         </div>
       `,
@@ -79,22 +84,35 @@ class DropDown {  constructor() {
               <span class="switch-btn"></span>
               <span class="description">即時測站波形圖設定</span>
             </label>
-            <div>
-              <span>即時測站波形圖總開關</span>
-              <label class="switch">
-                <input id="rtw-main-switch" type="checkbox">
-                <div class="slider round"></div>
-              </label>
+            <div class="setting-option">
+              <div>
+                <span>即時測站波形圖總開關</span>
+                <label class="switch">
+                  <input id="rtw-main-switch" type="checkbox">
+                  <div class="slider round"></div>
+                </label>
+              </div>
+              <div class="color-picker-wrapper">
+                <span>即時測站波形圖主題色</span>
+                <input type="color"
+                      id="rtw-color-picker"
+                      value="${localStorage.getItem('rtw-color') || this.defaultColor}">
+              </div>
+              <div class="color-picker-wrapper">
+                <span>即時測站波形圖波形色</span>
+                <input type="color"
+                      id="rtw-chart-color-picker"
+                      value="${localStorage.getItem('rtw-chart-color') || this.defaultColor}">
+              </div>
+              <div>
+                <span class="rtw-reset-setting"></span>
+                <label class="switch">
+                  <div class="rtw-reset-button"></div>
+                </label>
+              </div>
             </div>
-            <!-- 添加顏色選擇器 -->
-            <div class="color-picker-wrapper">
-              <span>即時測站波形圖主題色</span>
-              <input type="color" 
-                     id="rtw-color-picker" 
-                     value="${localStorage.getItem('rtw-color') || this.defaultColor}">
-            </div>
-            ${options}
           </div>
+          ${options}
         </div>`;
       settingContent.appendChild(element);
 
@@ -125,24 +143,152 @@ class DropDown {  constructor() {
           gap: 4px;
           justify-content: space-between;
         }
+        .rtw-reset-setting + .switch {
+          width: auto;
+        }
+        .rtw-reset-button {
+          border-radius: 5px;
+          border: 1px solid #ffffff24;
+          width: auto;
+          height: 3px;
+          cursor: pointer;
+          color: var(--danger);
+          justify-content: center;
+        }
+        .rtw-reset-button:hover {
+          background: #48484d;
+        }
+        .rtw-reset-setting::before {
+          content: "重設rtw設定";
+        }
+        .rtw-reset-button::before {
+          content: "重設";
+          white-space: nowrap;
+        }
+        .rtw-reset .confirm-title::before {
+          content: "您確定要重設rtw設定嗎？";
+        }
       `;
       document.head.appendChild(style);
+
+      this.resetConfirmWrapper = document.querySelector('.confirm-wrapper');
+
+      // 重置按鈕功能
+      const resetBtn = element.querySelector('.rtw-reset-button');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          this.resetConfirmWrapper.classList.add('rtw-reset');
+          this.resetConfirmWrapper.style.bottom = '0%';
+          const confirmSureBtn = this.resetConfirmWrapper.querySelector('.confirm-sure');
+          this.addCountDown(confirmSureBtn);
+        });
+      }
+
+      this.resetConfirmWrapper.addEventListener('click', (event) => {
+        if (!this.resetConfirmWrapper.classList.contains('rtw-reset')) {
+          return;
+        }
+        const { classList } = event.target;
+        if (classList[0] == 'confirm-sure') {
+          this.resetConfirmWrapper.style.bottom = '-100%';
+          // 重置顏色設定
+          localStorage.setItem('rtw-color', this.defaultColor);
+          localStorage.setItem('rtw-chart-color', this.defaultChartColor);
+
+          // 更新色彩選擇器的值
+          const colorPicker = document.getElementById('rtw-color-picker');
+          const chartColorPicker = document.getElementById('rtw-chart-color-picker');
+          if (colorPicker) colorPicker.value = this.defaultColor;
+          if (chartColorPicker) chartColorPicker.value = this.defaultChartColor;
+
+          // 重置測站設定
+          this.supportRTW.forEach(source => {
+            localStorage.removeItem(`rtw-station-${source.keys}`);
+            const container = document.querySelector(`#realtime-station-${source.keys}`);
+            const locationWrapper = container.querySelector('.location');
+            if (locationWrapper) {
+              const station = TREM.variable.station.find(s => s.name === source.value);
+              if (station) {
+                const current = locationWrapper.querySelector('.current');
+                if (current) {
+                  current.textContent = `${station.loc}-${station.name}`;
+                }
+              }
+            }
+          });
+
+          // 重置主開關
+          localStorage.setItem('rtw-main-switch', 'true');
+          const mainSwitch = document.getElementById('rtw-main-switch');
+          if (mainSwitch) {
+            mainSwitch.checked = true;
+          }
+
+          // 更新主題色
+          const r = parseInt(this.defaultColor.substr(1,2), 16);
+          const g = parseInt(this.defaultColor.substr(3,2), 16);
+          const b = parseInt(this.defaultColor.substr(5,2), 16);
+          document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
+
+          // 通知插件視窗更新顏色
+          ipcRenderer.send("send-to-plugin-window", {
+            windowId: name,
+            channel: "update-rtw-color",
+            payload: this.defaultColor,
+          });
+          ipcRenderer.send("send-to-plugin-window", {
+            windowId: name,
+            channel: "update-rtw-chart-color",
+            payload: this.defaultChartColor,
+          });
+
+          this.logger.info('所有設定已重置為預設值');
+          this.showBubble('success', 1500);
+        }
+        else if (classList[0] == 'confirm-cancel') {
+          this.hideConfirmWrapper();
+        }
+      });
 
       const colorPicker = document.getElementById('rtw-color-picker');
       if (colorPicker) {
         colorPicker.addEventListener('change', (e) => {
           const color = e.target.value;
           localStorage.setItem('rtw-color', color);
-          
+
           const r = parseInt(color.substr(1,2), 16);
           const g = parseInt(color.substr(3,2), 16);
           const b = parseInt(color.substr(5,2), 16);
-          
+
           document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
-          
-          if (window.electron) {
-            window.electron.ipcRenderer.send('update-rtw-color', color);
-          }
+
+          ipcRenderer.send("send-to-plugin-window", {
+            windowId: name,
+            channel: "update-rtw-color",
+            payload: color,
+          });
+          this.logger.debug('updated color:', color);
+        });
+      }
+
+      const chartColorPicker = document.getElementById('rtw-chart-color-picker');
+      if (chartColorPicker) {
+        chartColorPicker.addEventListener('change', (e) => {
+          const color = e.target.value;
+          localStorage.setItem('rtw-chart-color', color);
+
+          const r = parseInt(color.substr(1,2), 16);
+          const g = parseInt(color.substr(3,2), 16);
+          const b = parseInt(color.substr(5,2), 16);
+
+          document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
+
+          ipcRenderer.send("send-to-plugin-window", {
+            windowId: name,
+            channel: "update-rtw-chart-color",
+            payload: color,
+          });
+          this.logger.debug('updated chart color:', color);
         });
       }
 
@@ -157,6 +303,30 @@ class DropDown {  constructor() {
     }
 
     this.initDropDown(TREM);
+  }
+
+  addCountDown(confirmSureBtn) {
+    this.countdown = 5;
+    clearInterval(this.interval);
+    confirmSureBtn.classList.add('disabled');
+    confirmSureBtn.textContent = this.countdown;
+    this.interval = setInterval(() => {
+      this.countdown--;
+      if (this.countdown > 0) {
+        confirmSureBtn.textContent = this.countdown;
+      }
+      else {
+        confirmSureBtn.textContent = '';
+        confirmSureBtn.classList.remove('disabled');
+        clearInterval(this.interval);
+      }
+    }, 1000);
+  }
+
+  hideConfirmWrapper() {
+    this.resetConfirmWrapper.classList.remove('rtw-reset');
+    this.resetConfirmWrapper.style.bottom = '-100%';
+    clearInterval(this.interval);
   }
 
   initDropDown(TREM) {
@@ -361,6 +531,20 @@ class DropDown {  constructor() {
         });
         button.classList.add("on");
       });
+  }
+
+  showBubble(message, duration = 3000) {
+    if (!this.messageContent || !this.messageBox || this.messageContent.classList.contains(message) || this.messageBox.classList.contains(message)) {
+      return;
+    }
+    this.messageContent.classList.add(message);
+    this.messageBox.classList.add(message);
+    setTimeout(() => {
+      this.messageContent.classList.remove(message);
+      setTimeout(() => {
+        this.messageBox.classList.remove(message);
+      }, 200);
+    }, duration);
   }
 }
 

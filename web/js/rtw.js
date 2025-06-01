@@ -114,28 +114,6 @@ const fetch_files = async () => {
 			station_v2_run(station_data);
 		}
 
-		if (!data.stations) {
-			const station_data = await (await fetch(route.tremStation(1))).json();
-			station_v2_run(station_data);
-		}
-
-		// if (app.Configuration.data["Real-time.local"]) res = require(path.resolve(__dirname, "../station.json"));
-		// else res = await (await fetch("https://raw.githubusercontent.com/ExpTechTW/API/master/Json/earthquake/station.json")).json();
-
-		// if (!res) res = await (await fetch("https://cdn.jsdelivr.net/gh/ExpTechTW/API@master/Json/earthquake/station.json")).json();
-
-		// if (!res) res = await (await fetch("https://exptech.com.tw/api/v1/file?path=/resource/station.json")).json();
-
-		// if (res) {
-		// 	for (let i = 0, k = Object.keys(res), n = k.length; i < n; i++) {
-		// 		const id = k[i];
-
-		// 		if (res[id].Long > 118)
-		// 			s[id.split("-")[2]] = { uuid: id, ...res[id] };
-		// 	}
-
-		// 	data.stations = s;
-		// }
         chartuuids = [
             initializeStation('1'),
             initializeStation('2'),
@@ -290,16 +268,24 @@ const setCharts = (ids) => {
 		}
 };
 
+function setchart(newColor, theme = true) {
+	if (theme) {
+		const r = parseInt(newColor.substr(1,2), 16);
+		const g = parseInt(newColor.substr(3,2), 16);
+		const b = parseInt(newColor.substr(5,2), 16);
+		document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
+	}
+	charts.forEach(chart => {
+        chart.setOption({
+            series: [{
+                color: newColor
+            }]
+        });
+    });
+}
+
 async function init() {
-    const savedColor = localStorage.getItem('rtw-color') || '#6750A4';
-
-    const r = parseInt(savedColor.substr(1,2), 16);
-    const g = parseInt(savedColor.substr(3,2), 16);
-    const b = parseInt(savedColor.substr(5,2), 16);
-    
-    document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
-
-    for (const chart of charts)
+	charts.forEach(chart => {
         chart.setOption({
             title: {
                 textStyle: {
@@ -335,10 +321,14 @@ async function init() {
                     type: "line",
                     showSymbol: false,
                     data: [],
-                    color: savedColor,
                 },
             ],
         });
+	});
+	const savedColor = localStorage.getItem('rtw-color') || '#6750A4';
+	setchart(savedColor);
+	const savedChartColor = localStorage.getItem('rtw-chart-color') || '#6750A4';
+	if (savedColor != savedChartColor) setchart(savedChartColor, false);
     await (async () => {
 		await fetch_files();
 
@@ -475,4 +465,14 @@ const wave = (wave_data) => {
 ipcRenderer.on("rtw", (event, ans) => {
     wave(ans);
     // console.log("Received rtw:", ans);
+});
+
+ipcRenderer.on('update-rtw-color', (event, color) => {
+	setchart(color);
+    console.log("Received color:", color);
+});
+
+ipcRenderer.on('update-rtw-chart-color', (event, color) => {
+	setchart(color, false);
+    console.log("Received chart color:", color);
 });

@@ -16,8 +16,8 @@ class Plugin {
     this.logger.info("Loading rtw plugin...");
 
     // 初始化 DropDown 實例
-    this.dropDown = new this.DropDown();
-    this.dropDown.init(TREM, this.logger);
+    this.dropDown = new this.DropDown(this.logger);
+    this.dropDown.init(TREM, ipcRenderer, this.name);
     this.dropDown.addClickEvent();
 
     if (TREM.variable && TREM.variable.events) {
