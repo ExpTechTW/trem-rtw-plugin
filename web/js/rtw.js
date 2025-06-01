@@ -71,8 +71,6 @@ let chartuuids = [
 	Realtimestation,
 ];
 
-const chartColor = localStorage.getItem('rtw-chart-color') || '#6750A4';
-
 const charts = [
 	echarts.init(document.getElementById("wave-1"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
 	echarts.init(document.getElementById("wave-2"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
@@ -83,19 +81,6 @@ const charts = [
 	echarts.init(document.getElementById("wave-7"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
 	echarts.init(document.getElementById("wave-8"), null, { height: 560 / 6, width: 400, renderer: "svg" }),
 ];
-
-// 監聽顏色變更事件
-window.addEventListener('rtw-color-change', (event) => {
-    const newColor = event.detail.color;
-    // 更新所有圖表的顏色
-    charts.forEach(chart => {
-        chart.setOption({
-            series: [{
-                color: newColor
-            }]
-        });
-    });
-});
 const chartdata = [
 	[],
 	[],
@@ -298,7 +283,7 @@ const setCharts = (ids) => {
 						type       : "line",
 						showSymbol : false,
 						data       : [],
-						color      : chartColor,
+						color      : "#6750A4",
 					},
 				],
 			});
@@ -306,6 +291,14 @@ const setCharts = (ids) => {
 };
 
 async function init() {
+    const savedColor = localStorage.getItem('rtw-color') || '#6750A4';
+
+    const r = parseInt(savedColor.substr(1,2), 16);
+    const g = parseInt(savedColor.substr(3,2), 16);
+    const b = parseInt(savedColor.substr(5,2), 16);
+    
+    document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
+
     for (const chart of charts)
         chart.setOption({
             title: {
@@ -339,10 +332,10 @@ async function init() {
             },
             series: [
                 {
-                    type       : "line",
-                    showSymbol : false,
-                    data       : [],
-                    color      : chartColor,
+                    type: "line",
+                    showSymbol: false,
+                    data: [],
+                    color: savedColor,
                 },
             ],
         });

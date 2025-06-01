@@ -20,7 +20,7 @@ body.md3-dark {
   --md-sys-color-background: 28, 27, 31;
   --md-sys-color-on-background: 230, 225, 229;
   --md-sys-color-on-background-reverse: 28, 27, 31;
-  --md-sys-color-primary: 208, 188, 255;
+  --md-sys-color-primary: var(--user-primary-color, 145, 194, 233);
   --md-sys-color-primary-container: 79, 55, 139;
   --md-sys-color-on-primary-container: 234, 221, 255;
   --md-sys-color-on-primary: 55, 30, 115;
