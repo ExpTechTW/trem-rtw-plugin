@@ -1,10 +1,10 @@
 {
-  "timestamp": 1748785887927,
-  "version": "1.1.1",
+  "timestamp": 1748787547864,
+  "version": "1.2.0",
   "fileHashes": {
-    "drop_down.js": "efdba9c8a5d97c7c53db93a6a9152c3551cef518c1e2f4a2b424ef71fd8d4853",
+    "drop_down.js": "e3ca66790cc577456fda53eb4e99ce47cc9cceb36a98a30ee314cb8e89a62525",
     "index.js": "96438e2f8ac478dca72f67b475fd65ecbb839bdb4fc31c0aaa1935b9caeb6b8b",
-    "info.json": "e4b527a269bc0f74b8152139b97907bcb13130bd8b08e46e24779decf3f7d401",
+    "info.json": "2b57be2de5ba8415f74086260ab69bda643a67f29082d7a6680dcdad17eec330",
     "region.json": "91c22b0f1d71bf12fd45cecf2b54685a9442f0e180ee94f5441912d87bed7803",
     "web/css/disable_scrollbar.css": "adc3252eb2848dd6cc1a2b867e1586591984109a07c52eaf6148504c3367c522",
     "web/css/index.css": "f600611bce5763a45f00e145f40f8daa1a02e635c6f9dc34d38d2ca6bf98e38a",
@@ -33,6 +33,6 @@
     "web/resource/js/echarts.js": "4ff1bfa8176d508c2c654960111ae00044fe891358c0c7b692a92698357011b0",
     "web/resource/region_v2.json": "1e6837a1d099e866a327c521ee539fa29b3e4454d4d3cfe2046a74b6baaa0652"
   },
-  "signature": "FPNpOmq08urnF8vBX3UmtO7b69mMgfroX1PpJX0YgeQfYJwVKWsErJjMr7zcyWVGdM/E4ZlUskDPE6QhZFuksrjzeFM4CAKFZiCVZHQTfn+l/FXqsnSZiiDx+J6co+Zkm9WPbog11hwBczdS3d5Xgiqz10vTx7TLjmoqc1tPpF7iyxdeV4rBbhGBzvl/kDx+U+Tbqjzf9zzNz3FWOW7P5zV+jn/2Una0OQHahISEayYIY3oYmtP1IHYRE2eFGfS7K731GYecORZn1k4V+t11QMCS7ZIiJS1LK7ojXw06JGOwGa5C625BTL3SxZ4pwOM+/M7IMq9+fjuuxM/Q68pJbg==",
+  "signature": "ToTlSgHvzJeB6aQ6+nHW8zrVCNHh4Z7KFapQsCh1X4DiMNF76y/WXsWbKpy96TgfX33zfu05BhZ2ExA0dHZK0D46I2UQhBdgAUGhEzn9fXINvH8GPbKDkoimRsG0/sXyw7UE4Hch15xPVBdT/nMaJcXbO2jsW2lf5kdZKThNsiO0hCu9yqZ2bkPmbOSEmTRAo+A721eDikCaqQE5jqbEOK4HlsJLpiNI3Zs5SoGTdyjhbljurLHPOvNWwHtLSeirZwv1CJemXlUh1Y6oV/w++UoMClKcu6hI6JQqYUCG1g0nxP02b/JAZDX6lOiEkNFID2mVfbiMa+HLRzb18brRkw==",
   "keyId": "official"
 }

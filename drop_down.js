@@ -251,10 +251,16 @@ class DropDown {
       });
 
       const colorPicker = document.getElementById('rtw-color-picker');
+      const chartColorPicker = document.getElementById('rtw-chart-color-picker');
       if (colorPicker) {
         colorPicker.addEventListener('change', (e) => {
           const color = e.target.value;
           localStorage.setItem('rtw-color', color);
+          const Chartcolor = localStorage.getItem('rtw-chart-color') || '#6750A4';
+	        if (color != Chartcolor) {
+            localStorage.setItem('rtw-chart-color', color);
+            chartColorPicker.value = color;
+          }
 
           const r = parseInt(color.substr(1,2), 16);
           const g = parseInt(color.substr(3,2), 16);
@@ -270,8 +276,6 @@ class DropDown {
           this.logger.debug('updated color:', color);
         });
       }
-
-      const chartColorPicker = document.getElementById('rtw-chart-color-picker');
       if (chartColorPicker) {
         chartColorPicker.addEventListener('change', (e) => {
           const color = e.target.value;
