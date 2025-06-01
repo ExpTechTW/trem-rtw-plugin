@@ -8,20 +8,6 @@ class DropDown {  constructor() {
       }
     };
 
-    this.loadColorPickerState = () => {
-      const colorPicker = document.getElementById('rtw-color-picker');
-      const colorDisplay = document.getElementById('rtw-color-display');
-      if (colorPicker && colorDisplay) {
-        const savedColor = localStorage.getItem('rtw-chart-color') || '#6750A4';
-        colorPicker.value = savedColor;
-        colorDisplay.textContent = savedColor;
-      }
-    };
-
-    this.saveColorPickerState = (color) => {
-      localStorage.setItem('rtw-chart-color', color);
-    };
-
     this.saveMainSwitchState = (value) => {
       localStorage.setItem('rtw-main-switch', value);
     };
@@ -34,6 +20,8 @@ class DropDown {  constructor() {
       { keys: "5", value: "6126556", text: "即時測站波形圖5" },
       { keys: "6", value: "6732340", text: "即時測站波形圖6" },
     ];
+
+    this.defaultColor = '#6750A4';
   }
 
   init(TREM, logger) {
@@ -50,30 +38,30 @@ class DropDown {  constructor() {
         .map(
           (source) => `
         <div class="setting-item-content">
-          <span class="setting-item-title rts-station-title">${source.text}</span>
-          <div
-            id="realtime-station-${source.keys}"
-            class="setting-option realtime-station"
-          >
-            <div class="location">
-              <span class="current">${source.value}</span>
-              <svg
-                class="selected-btn"
-                xmlns="http://www.w3.org/2000/svg"
-                height="24"
-                viewBox="0 0 24 24"
-                width="24"
-              >
-                <path
-                  d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-            </div>
-            <div class="select-wrapper">
-              <div class="select-items city"></div>
-              <div class="select-items town"></div>
-            </div>
+          <span class="setting-item-title">${source.text}</span>
+        </div>
+        <div
+          id="realtime-station-${source.keys}"
+          class="setting-option realtime-station"
+        >
+          <div class="location">
+            <span class="current">${source.value}</span>
+            <svg
+              class="selected-btn"
+              xmlns="http://www.w3.org/2000/svg"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+            >
+              <path
+                d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"
+                fill="currentColor"
+              ></path>
+            </svg>
+          </div>
+          <div class="select-wrapper">
+            <div class="select-items city"></div>
+            <div class="select-items town"></div>
           </div>
         </div>
       `,
@@ -87,31 +75,77 @@ class DropDown {  constructor() {
         <div class="setting-item-wrapper">
           <div class="setting-item-content">
             <span class="setting-item-title">rtw setting</span>
-            <span class="description">即時測站波形圖設定</span>
-            <div class="setting-option">
-              <div>
-                <span>即時測站波形圖總開關</span>
-                <label class="switch">
-                  <input id="rtw-main-switch" type="checkbox">
-                  <div class="slider round"></div>
-                </label>
-              </div>
+            <label class="switch-wrapper">
+              <span class="switch-btn"></span>
+              <span class="description">即時測站波形圖設定</span>
+            </label>
+            <div>
+              <span>即時測站波形圖總開關</span>
+              <label class="switch">
+                <input id="rtw-main-switch" type="checkbox">
+                <div class="slider round"></div>
+              </label>
             </div>
-          </div>
-          <div class="setting-item-content">
-            <span class="setting-item-title">波形圖顏色</span>
-            <div class="setting-option">
-              <div>
-                <span id="rtw-color-display">#6750A4</span>
-                <label>
-                  <input type="color" id="rtw-color-picker" value="#6750A4">
-                </label>
-              </div>
+            <!-- 添加顏色選擇器 -->
+            <div class="color-picker-wrapper">
+              <span>即時測站波形圖主題色</span>
+              <input type="color" 
+                     id="rtw-color-picker" 
+                     value="${localStorage.getItem('rtw-color') || this.defaultColor}">
             </div>
+            ${options}
           </div>
-          ${options}
         </div>`;
       settingContent.appendChild(element);
+
+      const style = document.createElement('style');
+      style.textContent = `
+        .color-picker-wrapper input[type="color"] {
+          border: none;
+          padding: 0;
+          width: 32px;
+          height: 32px;
+          border-radius: 5px;
+          background: none;
+          box-shadow: none;
+          outline: none;
+          cursor: pointer;
+        }
+        .color-picker-wrapper input[type="color"]::-webkit-color-swatch-wrapper {
+          padding: 0;
+          border-radius: 0;
+        }
+        .color-picker-wrapper input[type="color"]::-webkit-color-swatch {
+          border: none;
+          border-radius: 0;
+        }
+        .color-picker-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          justify-content: space-between;
+        }
+      `;
+      document.head.appendChild(style);
+
+      const colorPicker = document.getElementById('rtw-color-picker');
+      if (colorPicker) {
+        colorPicker.addEventListener('change', (e) => {
+          const color = e.target.value;
+          localStorage.setItem('rtw-color', color);
+          
+          const r = parseInt(color.substr(1,2), 16);
+          const g = parseInt(color.substr(3,2), 16);
+          const b = parseInt(color.substr(5,2), 16);
+          
+          document.documentElement.style.setProperty('--user-primary-color', `${r}, ${g}, ${b}`);
+          
+          if (window.electron) {
+            window.electron.ipcRenderer.send('update-rtw-color', color);
+          }
+        });
+      }
+
       const mainSwitch = document.getElementById('rtw-main-switch');
       if (mainSwitch) {
         mainSwitch.addEventListener('change', (e) => {
@@ -119,25 +153,7 @@ class DropDown {  constructor() {
         });
       }
 
-      // 載入已保存的總開關狀態
       this.loadMainSwitchState();
-
-      // 設置顏色選擇器的事件處理
-      const colorPicker = document.getElementById('rtw-color-picker');
-      const colorDisplay = document.getElementById('rtw-color-display');
-      if (colorPicker && colorDisplay) {
-        colorPicker.addEventListener('input', (e) => {
-          const color = e.target.value;
-          colorDisplay.textContent = color;
-          this.saveColorPickerState(color);
-          // 觸發事件通知圖表更新顏色
-          const event = new CustomEvent('rtw-color-change', { detail: { color } });
-          window.dispatchEvent(event);
-        });
-      }
-
-      // 載入已保存的顏色設置
-      this.loadColorPickerState();
     }
 
     this.initDropDown(TREM);
